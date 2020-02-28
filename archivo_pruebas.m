@@ -5,7 +5,7 @@ tspan = 0:Tsim:15;
 
 %tspan = [0 5];
 
-p0 = [0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0];%ones(12, 1);
+p0 = [0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0];
 tao = [0; 0; 0; 0; 0; 0];
 
 [t, p] = ode45(@(t,y) auv_system(t,y,tao), tspan, p0);
@@ -24,7 +24,6 @@ for j=1:4
     hold on
 
     for i=1+(j-1)*3:3*j
-        i
        plot(t, p(:, i));
     end
     legend('x', 'y', 'z');
@@ -54,23 +53,3 @@ q.LineWidth = 0.1;
 q.AutoScale = 'off';
 
 grid on
-%% Pruebas
-clc;
-p = sym('p', [12 1]);
-
-G1 = [cos(p(5))*cos(p(6)) sin(p(4))*sin(p(5))*cos(p(6))-cos(p(4))*sin(p(6)) cos(p(4))*sin(p(5))*cos(p(6))+sin(p(4))*sin(p(6));
-      cos(p(5))*sin(p(6))   sin(p(4))*sin(p(5))*sin(p(6))+cos(p(4))*cos(p(6)) cos(p(4))*sin(p(5))*sin(p(6))-sin(p(4))*cos(p(6));
-     -sin(p(5))            sin(p(4))*cos(p(5))                               cos(p(4))*cos(p(5))
-     ];
-
-
-G2 = [1 sin(p(4))*tan(p(5))  cos(p(4))*tan(p(5));
-      0 cos(p(4))           -sin(p(4))          ;
-      0 sin(p(4))*sec(p(5))  cos(p(4))*sec(p(5))
-      ];
-  
-G = [G1 zeros(3,3);
-     zeros(3,3) G2];
-
-ds1 = G1*p(7:9);
-ds2 = G2*p(10:12);

@@ -27,26 +27,28 @@ C_matriz_dt = sys.C;
 disp("Terminado");
 
 %% Simulacion en Tiempo
-T = 200; %Tiempo de simulacion. En Segundos.
-dx_lineal = @(t, x) A_matriz*x + B_matriz*[1; -1]; %Aqui se usan variables de desviacion
+T = 20; %Tiempo de simulacion. En Segundos.
 
-[t_lin, x_lin] = ode45(dx_lineal, [0, T], zeros(nx, 1));
-[t_nolin, x_nolin] = ode45(@quadruple_tank_system, [0, T], ...
-    [h1e, h2e, h3e, h4e, u1e+1, u2e-1]);
+p0 = [0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0];
+dtao = [10; -10; 0; 0; 0; 0];
+tao = equils(13:end) + dtao;
+
+[t_nolin, x_nolin] = ode45(@(t,y) auv_system(t,y,tao), [0, T], ...
+    p0);
 
 x_dt = [];
-x_dt(:, 1) = zeros(nx, 1);
+x_dt(1, :) = p0;
 
 for k=1:T/Ts
-   x_dt(:, k+1) = A_matriz_dt*x_dt(:, k) + B_matriz_dt*[1; -1];
+   x_dt(k+1, :) = A_matriz_dt*x_dt(k, :)' + B_matriz_dt*dtao;
 end
 
 figure;
 hold on
-plot(t_lin, C_matriz*[x_lin' + hequils], 'b', 'LineWidth', 1);
-plot(t_nolin, C_matriz*x_nolin(:, 1:4)', 'r', 'LineWidth', 1);
-plot(1:Ts:T+1, C_matriz_dt*[x_dt + hequils], 'k--', 'LineWidth', 2);
-legend('Lineal 1', 'Lineal 2', 'No Lineal 1', 'No Lineal 2', 'Discreto 1', 'Discreto 2');
+plot(t_nolin, x_nolin(:, 1)', 'r', 'LineWidth', 1);
+x = [x_dt + equils(1)]';
+plot(1:Ts:T+1, C_matriz_dt*x,'k--', 'LineWidth', 2);
+legend('No Lin', 'Lin');
 xlabel('Tiempo (s)');
 ylabel('Altura Tanques (cm)');
 
