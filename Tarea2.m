@@ -16,7 +16,7 @@ omegas = [0; 0; 0];
 
 equils = lineal(thetas,omegas);
 %% Ecuacion de estado
-Ts = 1;
+Ts = 0.1;
 
 sys = ecuacion_estado(equils, Ts);
 
@@ -30,7 +30,7 @@ disp("Terminado");
 T = 20; %Tiempo de simulacion. En Segundos.
 
 p0 = [0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0];
-dtao = [10; -10; 0; 0; 0; 0];
+dtao = [0.1; 0; 0; 0; 0; 0];
 tao = equils(13:end) + dtao;
 
 [t_nolin, x_nolin] = ode45(@(t,y) auv_system(t,y,tao), [0, T], ...
@@ -43,11 +43,16 @@ for k=1:T/Ts
    x_dt(k+1, :) = A_matriz_dt*x_dt(k, :)' + B_matriz_dt*dtao;
 end
 
+%%yk = C_matriz_dt*x;
+
+x=zeros(size(x_dt));
 figure;
 hold on
 plot(t_nolin, x_nolin(:, 1)', 'r', 'LineWidth', 1);
-x = [x_dt + equils(1)]';
-plot(1:Ts:T+1, C_matriz_dt*x,'k--', 'LineWidth', 2);
+for i=1:nx
+    x(:,i) = x_dt(:,i) + equils(i);
+end
+plot(0:Ts:T, x(:,1),'k--', 'LineWidth', 2);
 legend('No Lin', 'Lin');
 xlabel('Tiempo (s)');
 ylabel('Altura Tanques (cm)');

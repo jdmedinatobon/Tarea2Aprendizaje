@@ -113,13 +113,12 @@ for i=1:nx
    end
 end
 
-
 C = eye(nx);
 
 D = zeros(nx,nu);
 
-sys = ss(A, B, C, D, Ts); %Sistema usando ss (state space)
-
+sys_c = ss(A, B, C, D); %Sistema usando ss (state space)
+sys = c2d(sys_c,Ts);
 
 
 end
