@@ -60,9 +60,8 @@ clf;
 
 yalmip('clear');
 Hp = 25;
-maxIter = 100;
 Q = diag([10,10,10,10,10,10,1,1,1,1,1,1]);
-R = 0.01*diag([1,1,1,1,1,1]);
+R = 0.1*diag([1,1,1,1,1,1]);
 
 %Restricciones
 x_max = 13/2 - equils(1); y_max = 25/2 - equils(2); z_max = 3/2 - equils(3);
@@ -112,9 +111,10 @@ x = zeros(nx, 1);
 xs = [x];
 us = [zeros(nu, 1)];
 
-t_tray = linspace(0, 1);
+maxIter = 100;
+t_tray = linspace(0, 1, maxIter);
 
-trayectoria = trayectoria1(t_tray);
+trayectoria = trayectoria4(t_tray);
 ref = C_matriz_dt*trayectoria;
 
 for k=1:maxIter

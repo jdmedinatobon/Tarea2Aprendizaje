@@ -77,3 +77,32 @@ D = zeros(nx,nu);
 
 sys_c = ss(A, B, C, D); %Sistema usando ss (state space)
 sys = c2d(sys_c,Ts);
+
+%% Probando trayectorias
+
+t = t_tray;
+
+T = length(t);
+
+
+trayectoria = [0*t; 0*t; 1*t; 0*t; 0*t; 0*t; 0*t; 0*t; 0*t; 0*t; 0*t; 0*t];
+
+trayectoria(1, 1:T/4) = linspace(0,2, T/4);
+trayectoria(1, T/4+1:T/2) = 2;
+trayectoria(1, T/2+1:3*T/4) = linspace(2,-1, T/4);
+trayectoria(1, 3*T/4+1:end) = -1;
+
+trayectoria(2, 1:T/4) = 0;
+trayectoria(2, T/4+1:T/2) = linspace(0,2,T/4);
+trayectoria(2, T/2+1:3*T/4) = 2;
+trayectoria(2, 3*T/4+1:end) = linspace(2,-1, T/4);
+
+
+figure(1)
+
+plot3(trayectoria(1,:), trayectoria(2,:), trayectoria(3,:), 'r--', 'LineWidth', 2);
+title('Posición en X, Y, Z');
+xlabel('x');
+ylabel('y');
+zlabel('z');
+grid on

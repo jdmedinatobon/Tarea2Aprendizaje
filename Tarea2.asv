@@ -60,7 +60,6 @@ clf;
 
 yalmip('clear');
 Hp = 25;
-maxIter = 100;
 Q = diag([10,10,10,10,10,10,1,1,1,1,1,1]);
 R = 0.01*diag([1,1,1,1,1,1]);
 
@@ -104,13 +103,19 @@ ops = sdpsettings('solver', 'quadprog', 'verbose', 0);
 
 controller = optimizer(constraints, objective, ops, {x{1}, r}, u{1});
 
-%% 
+%% MPC Simulacion
+clc;
+clf;
+
 x = zeros(nx, 1); 
 xs = [x];
 us = [zeros(nu, 1)];
 
-t_tray = linspace(0, 1);
-ref = C_matriz_dt*[3*t_tray; 8*t_tray; 0.5*t_tray; 0*t_tray; 0*t_tray; 0*t_tray; 0*t_tray; 0*t_tray; 0*t_tray; 0*t_tray; 0*t_tray; 0*t_tray];
+maxIter = 200;
+t_tray = linspace(0, 1, maxIter);
+
+trayectoria = trayectoria3(t_tray);
+ref = C_matriz_dt*trayectoria;
 
 for k=1:maxIter
    k
@@ -120,7 +125,7 @@ for k=1:maxIter
             x(9) + equils(9), x(10) + equils(10), x(11) + equils(11), x(12) + equils(12)];
    uk = [uk(1) + equils(13), uk(2) + equils(14), uk(3) + equils(15),...
          uk(4) + equils(16), uk(5) + equils(17), uk(6) + equils(18)];
-   %[t, x_out] = ode45(@quadruple_tank_system, [0:0.1:Ts], conds);
+     
    [t, x_out] = ode45(@(t,y) auv_system(t,y,uk'), [0:1e-3:Ts], conds');
    
    x = x_out(end,:)' - equils(1:12);
@@ -152,8 +157,8 @@ end
 figure(2);
 hold on
 
-plot3(xs(1,:) + equils(1), xs(2,:) + equils(2), xs(3,:) + equils(3), 'LineWidth', 1);
-plot3();
+plot3(xs(1,:) + equils(1), xs(2,:) + equils(2), xs(3,:) + equils(3), 'LineWidth', 2);
+plot3(trayectoria(1,:), trayectoria(2,:), trayectoria(3,:), 'r--', 'LineWidth', 2);
 plot3(xs(1,1) + equils(1), xs(2,1) + equils(2), xs(3,1) + equils(3), 'MarkerSize', 10,...
     'Marker', 'o', 'Color', 'k');
 plot3(xs(1,end) + equils(1), xs(2,end) + equils(2), xs(3,end) + equils(3), 'MarkerSize', 10,...
@@ -162,6 +167,7 @@ title('Posición en X, Y, Z');
 xlabel('x');
 ylabel('y');
 zlabel('z');
+legend('Trayectoria ROV', 'Trayectoria Referencia', 'Comienzo', 'Final');
 grid on
 
 figure(3);
