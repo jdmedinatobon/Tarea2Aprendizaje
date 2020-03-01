@@ -53,3 +53,27 @@ q.LineWidth = 0.1;
 q.AutoScale = 'off';
 
 grid on
+
+%% Probando jacobian
+p = sym('p', [12 1]);
+tao = sym('tao', [6 1]);
+
+nx = 12;
+nu = 6;
+
+dp = auv_system(0, p, tao); 
+
+J1 = jacobian(dp, p);
+J2 = jacobian(dp, tao);
+
+A = double(subs(J1, [p; tao], equils));
+B = double(subs(J2, [p; tao], equils));
+
+C = [eye(6) zeros(6);
+    zeros(6) zeros(6)];
+% C = eye(12);
+
+D = zeros(nx,nu);
+
+sys_c = ss(A, B, C, D); %Sistema usando ss (state space)
+sys = c2d(sys_c,Ts);

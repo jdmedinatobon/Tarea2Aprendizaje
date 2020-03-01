@@ -15,7 +15,7 @@ ny = 12;
 thetas = [0; 0; 0];
 omegas = [0; 0; 0];
 
-equils = lineal(thetas,omegas);
+equils = puntos_equilibrio(thetas, omegas);
 %% Ecuacion de estado
 Ts = 1;
 
