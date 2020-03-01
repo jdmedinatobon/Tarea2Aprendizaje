@@ -24,9 +24,6 @@ sys = ecuacion_estado(equils, Ts);
 A_matriz_dt = sys.A;
 B_matriz_dt = sys.B;
 C_matriz_dt = sys.C;
-
-disp("Terminado");
-
 %% Simulacion en Tiempo
 T = 20; %Tiempo de simulacion. En Segundos.
 
@@ -44,9 +41,8 @@ for k=1:T/Ts
    x_dt(k+1, :) = A_matriz_dt*x_dt(k, :)' + B_matriz_dt*dtao;
 end
 
-%%yk = C_matriz_dt*x;
-
 x=zeros(size(x_dt));
+
 figure;
 hold on
 plot(t_nolin, x_nolin(:, 1)', 'r', 'LineWidth', 1);
@@ -58,7 +54,7 @@ legend('No Lin', 'Lin');
 xlabel('Tiempo (s)');
 ylabel('Altura Tanques (cm)');
 
-%% MPC
+%% MPC Planteamiento
 clc;
 clf;
 
@@ -68,7 +64,7 @@ maxIter = 100;
 Q = diag([10,10,10,10,10,10,1,1,1,1,1,1]);
 R = 0.01*diag([1,1,1,1,1,1]);
 
-% Constraints
+%Restricciones
 x_max = 13/2 - equils(1); y_max = 25/2 - equils(2); z_max = 3/2 - equils(3);
 phi_x_max = 45*pi/180 - equils(4); phi_y_max = 60*pi/180 - equils(5); phi_z_max = 100000000*pi - equils(6);
 vx_max = 1 - equils(7); vy_max = 1 - equils(8); vz_max = 0.1 - equils(9);
@@ -85,7 +81,6 @@ f_ox_max= 5.25*9.81/0.3 - equils(16); f_oy_max= 5.25*9.81/0.3 - equils(17); f_oz
 f_vx_min= -4.1*9.81 -equils(13); f_vy_min= -4.1*9.81 -equils(14); f_vz_min= -4.1*9.81 -equils(15);
 f_ox_min=-4.1*9.81/0.3 -equils(16); f_oy_min=-4.1*9.81/0.3 -equils(17); f_oz_min= -4.1*9.81/0.3 -equils(18);
 
-% YALMIP variables
 u = sdpvar(nu*ones(1, Hp), ones(1, Hp));
 x = sdpvar(nx*ones(1, Hp+1), ones(1, Hp+1));
 r = sdpvar(ny, 1);
@@ -109,20 +104,28 @@ ops = sdpsettings('solver', 'quadprog', 'verbose', 0);
 
 controller = optimizer(constraints, objective, ops, {x{1}, r}, u{1});
 
+%% MPC Simulacion
+clc;
+clf;
+
 x = zeros(nx, 1); 
 xs = [x];
 us = [zeros(nu, 1)];
-ref = C_matriz_dt*[3; 8; 0.5; 0; 0; 0; 0; 0; 0; 0; 0; 0];
+
+t_tray = linspace(0, 1);
+
+trayectoria = trayectoria1(t_tray);
+ref = C_matriz_dt*trayectoria;
 
 for k=1:maxIter
    k
-   uk = controller{x, ref};
+   uk = controller{x, ref(:, k)};
    conds = [x(1) + equils(1), x(2) + equils(2), x(3) + equils(3), x(4) + equils(4),...
             x(5) + equils(5), x(6) + equils(6), x(7) + equils(7), x(8) + equils(8),...
             x(9) + equils(9), x(10) + equils(10), x(11) + equils(11), x(12) + equils(12)];
    uk = [uk(1) + equils(13), uk(2) + equils(14), uk(3) + equils(15),...
          uk(4) + equils(16), uk(5) + equils(17), uk(6) + equils(18)];
-   %[t, x_out] = ode45(@quadruple_tank_system, [0:0.1:Ts], conds);
+     
    [t, x_out] = ode45(@(t,y) auv_system(t,y,uk'), [0:1e-3:Ts], conds');
    
    x = x_out(end,:)' - equils(1:12);
@@ -130,7 +133,6 @@ for k=1:maxIter
    xs = [xs, x];
    us = [us, uk'];
 end
-
 
 titulos = ["Posiciones", "Angulos", "Velocidades Lineales", "Velocidades Angulares"];
 ylabels = ["Posición (m)", "Ángulo (rad)", "Velocidad (m/s)", "Velocidad Angular (rad/s)"];
@@ -155,25 +157,31 @@ end
 figure(2);
 hold on
 
-plot3(xs(1,:)+ equils(1), xs(2,:)+ equils(2), xs(3,:)+ equils(3), 'LineWidth', 1);
+plot3(xs(1,:) + equils(1), xs(2,:) + equils(2), xs(3,:) + equils(3), 'LineWidth', 2);
+plot3(trayectoria(1,:), trayectoria(2,:), trayectoria(3,:), 'r--', 'LineWidth', 2);
+plot3(xs(1,1) + equils(1), xs(2,1) + equils(2), xs(3,1) + equils(3), 'MarkerSize', 10,...
+    'Marker', 'o', 'Color', 'k');
+plot3(xs(1,end) + equils(1), xs(2,end) + equils(2), xs(3,end) + equils(3), 'MarkerSize', 10,...
+    'Marker', 'x', 'Color', 'k'); 
 title('Posición en X, Y, Z');
 xlabel('x');
 ylabel('y');
 zlabel('z');
+legend('Trayectoria ROV', 'Trayectoria Referencia', 'Comienzo', 'Final');
 grid on
 
+figure(3);
 
-% 
-% figure;
-% hold on
-% plot(xs(1, :) + h1e, 'r', 'LineWidth', 2);
-% plot(ones(length(xs))*3+h1e, 'r--', 'LineWidth', 1);
-% plot(xs(2, :) + h2e, 'b', 'LineWidth', 2);
-% plot(ones(length(xs))*1+h2e, 'b--', 'LineWidth', 1);
-% legend('h1', 'Ref h1', 'h2', 'Ref h2');
-% 
-% figure;
-% hold on
-% plot(us(1,:) + u1e, 'r', 'LineWidth', 2);
-% plot(us(2,:) + u2e, 'b', 'LineWidth', 2);
-% legend('u1', 'u2');
+titulos = ["F vx", "F vy", "F vz", "F ox", "F oy", "F oz"];
+ylabels = ["N", "N", "N", "N?m", "N?m", "N?m"];
+
+for i=1:6
+    subplot(2,3,i);
+    hold on
+    
+    plot(us(i,:));
+    title(titulos(i));
+    xlabel('Tiempo');
+    ylabel(ylabels(i));
+end
+
