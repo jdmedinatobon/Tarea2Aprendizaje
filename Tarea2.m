@@ -25,7 +25,7 @@ A_matriz_dt = sys.A;
 B_matriz_dt = sys.B;
 C_matriz_dt = sys.C;
 %% Simulacion en Tiempo
-T = 20; %Tiempo de simulacion. En Segundos.
+T = 100; %Tiempo de simulacion. En Segundos.
 
 p0 = [0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0];
 dtao = [0.1; 0; 0; 0; 0; 0];
@@ -56,11 +56,10 @@ ylabel('Altura Tanques (cm)');
 
 %% MPC Planteamiento
 clc;
-clf;
 
 yalmip('clear');
-Hp = 25;
-Q = diag([10,10,10,10,10,10,1,1,1,1,1,1]);
+Hp = 10;
+Q = 100*diag([1,1,1,1,1,1,1,1,1,1,1,1]);
 R = 0.1*diag([1,1,1,1,1,1]);
 
 %Restricciones
@@ -86,6 +85,8 @@ r = sdpvar(ny, 1);
 constraints = [];
 objective = 0;
 
+
+
 for k=1:Hp
    objective = objective + norm(Q*[r - C_matriz_dt*x{k}], 2).^2 + norm(R*u{k}, 2).^2;
    constraints = [constraints, x{k+1} == A_matriz_dt*x{k} + B_matriz_dt*u{k}];
@@ -98,8 +99,6 @@ for k=1:Hp
 end
 
 ops = sdpsettings('solver', 'quadprog', 'verbose', 0);
-%Instalar el de cplex para la tarea.
-%Es gratis con la universidad.
 
 controller = optimizer(constraints, objective, ops, {x{1}, r}, u{1});
 
@@ -108,13 +107,14 @@ clc;
 clf;
 
 x = zeros(nx, 1); 
-xs = [x];
-us = [zeros(nu, 1)];
+xs = x;
+us = zeros(nu, 1);
 
 maxIter = 100;
-t_tray = linspace(0, 1, maxIter);
+t_tray = 0:Ts:maxIter;
+perturbaciones = perturbaciones3(t_tray);
+trayectoria = trayectoria2(t_tray);
 
-trayectoria = trayectoria4(t_tray);
 ref = C_matriz_dt*trayectoria;
 
 for k=1:maxIter
@@ -128,8 +128,8 @@ for k=1:maxIter
      
    [t, x_out] = ode45(@(t,y) auv_system(t,y,uk'), [0:1e-3:Ts], conds');
    
-   x = x_out(end,:)' - equils(1:12);
-   
+   x = x_out(end,:)' - equils(1:12)% + perturbaciones(:, k);
+   x
    xs = [xs, x];
    us = [us, uk'];
 end
@@ -173,7 +173,7 @@ grid on
 figure(3);
 
 titulos = ["F vx", "F vy", "F vz", "F ox", "F oy", "F oz"];
-ylabels = ["N", "N", "N", "N?m", "N?m", "N?m"];
+ylabels = ["N", "N", "N", "N m", "N m", "N m"];
 
 for i=1:6
     subplot(2,3,i);
