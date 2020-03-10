@@ -113,7 +113,7 @@ t_tray = 0:Ts:maxIter-1;
 %4 (en el caso de las trayectorias) y 3 (en el caso de las perturbaciones)
 %opciones.
 perturbaciones = perturbaciones1(t_tray);
-trayectoria = trayectoria3(t_tray);
+trayectoria = trayectoria2(t_tray);
 %Si las perturbaciones son muy grandes puede que no funcione de manera
 %correcta.
 
