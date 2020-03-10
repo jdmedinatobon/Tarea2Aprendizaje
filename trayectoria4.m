@@ -2,7 +2,7 @@ function tray = trayectoria4(t)
 
 T = length(t);
 
-tray = [0*t; 0*t; 1*t; 0*t; 0*t; 0*t; 0*t; 0*t; 0*t; 0*t; 0*t; 0*t];
+tray = [0*t; 0*t; 1*t/T; 0*t; 0*t; 0*t; 0*t; 0*t; 0*t; 0*t; 0*t; 0*t];
 
 x = [3, -1];
 y = [2, -3];
