@@ -9,15 +9,13 @@ nx = 12;
 nu = 6;
 ny = 12;
 
-% Puntos de equilibrio (Creo que son 6 los que hay que especificar y 
-%resolver para los demas.)
-%Por ahora escogi los angulos, porque si.
+% Puntos de equilibrio
 thetas = [0; 0; 0];
 omegas = [0; 0; 0];
 
 equils = puntos_equilibrio(thetas, omegas);
 %% Ecuacion de estado
-Ts = 1;
+Ts = 1; %Tiempo de muestreo
 
 sys = ecuacion_estado(equils, Ts);
 
@@ -52,7 +50,11 @@ end
 plot(0:Ts:T, x(:,1),'k--', 'LineWidth', 2);
 legend('No Lin', 'Lin');
 xlabel('Tiempo (s)');
+<<<<<<< HEAD
 ylabel('Distancia recorrida en x  (m)');
+=======
+ylabel('X (m)');
+>>>>>>> 9ac9abe3740152c329eaac7a3769ec5bce776967
 
 %% MPC Planteamiento
 clc;
@@ -85,8 +87,6 @@ r = sdpvar(ny, 1);
 constraints = [];
 objective = 0;
 
-
-
 for k=1:Hp
    objective = objective + norm(Q*[r - C_matriz_dt*x{k}], 2).^2 + norm(R*u{k}, 2).^2;
    constraints = [constraints, x{k+1} == A_matriz_dt*x{k} + B_matriz_dt*u{k}];
@@ -111,9 +111,15 @@ xs = x;
 us = zeros(nu, 1);
 
 maxIter = 100;
-t_tray = 0:Ts:maxIter;
-perturbaciones = perturbaciones3(t_tray);
+t_tray = 0:Ts:maxIter-1;
+
+%Para las perturbaciones y trayectorias se puede escoger cualquiera de las
+%4 (en el caso de las trayectorias) y 3 (en el caso de las perturbaciones)
+%opciones.
+perturbaciones = perturbaciones1(t_tray);
 trayectoria = trayectoria2(t_tray);
+%Si las perturbaciones son muy grandes puede que no funcione de manera
+%correcta.
 
 ref = C_matriz_dt*trayectoria;
 
@@ -128,8 +134,8 @@ for k=1:maxIter
      
    [t, x_out] = ode45(@(t,y) auv_system(t,y,uk'), [0:1e-3:Ts], conds');
    
-   x = x_out(end,:)' - equils(1:12)% + perturbaciones(:, k);
-   x
+   x = x_out(end,:)' - equils(1:12) + perturbaciones(:, k);
+   
    xs = [xs, x];
    us = [us, uk'];
 end
