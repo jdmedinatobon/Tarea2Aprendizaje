@@ -52,7 +52,7 @@ end
 plot(0:Ts:T, x(:,1),'k--', 'LineWidth', 2);
 legend('No Lin', 'Lin');
 xlabel('Tiempo (s)');
-ylabel('Altura Tanques (cm)');
+ylabel('Distancia recorrida en x  (m)');
 
 %% MPC Planteamiento
 clc;
